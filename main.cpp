@@ -135,18 +135,7 @@ void loadLVertices(){
     // add point to L
     letterL.addVertex(letterL.convertPointPos(point6));
 }
-void drawCircle(float cx, float cy, float r, int num_segments) {
-    glBegin(GL_TRIANGLE_FAN);        // filled circle
-    glColor3f(1.0f, 0.0f, 0.0f);
-    glVertex2f(cx, cy);              // center
-    for (int i = 0; i <= num_segments; i++) {
-        float theta = 2.0f * M_PI * float(i) / float(num_segments); // angle
-        float x = r * cosf(theta);
-        float y = r * sinf(theta);
-        glVertex2f(cx + x, cy + y);
-    }
-    glEnd();
-}
+
 void defineCircle(Character& character, int segment, float radius, int posToPivot){
     // define circle of B using calculus
    
@@ -205,30 +194,21 @@ void loadInnerB2Vertices(){
     // draw half circle
     defineCircle(innerLetterB_2, 50, 0.25, 1);    
 }
-
-void myDisplay(){
-    glClear(GL_COLOR_BUFFER_BIT);
-
+void drawL(){
     // green
     glColor3f(0.0f, 1.0f, 0.0f);
 
-    // load l vertices
-    loadLVertices();
-    
     glBegin(GL_POLYGON);
         for(int i = 0; i < letterL.vertices.size(); i ++){
             glVertex2f(letterL.vertices[i].xPos, letterL.vertices[i].yPos);
         }
     glEnd();
-    
-    // draw pivots
-    drawCircle(outerLetterB.pivotX, outerLetterB.pivotY, 0.05, 50);
-    
+}
+
+void drawB(){
     // green
     glColor3f(0.0f, 1.0f, 0.0f);
-    // load outer B
-    loadOuterBVertices();
-
+    
     // draw
     glBegin(GL_POLYGON);
         for(int i = 0; i < outerLetterB.vertices.size(); i ++){
@@ -238,9 +218,7 @@ void myDisplay(){
 
    
     glColor3f(0.0f, 0.0f, 0.0f);
-    loadInnerB1Vertices();
     
-
     // draw
     glBegin(GL_POLYGON);
         for(int i = 0; i < innerLetterB_1.vertices.size(); i ++){
@@ -248,14 +226,35 @@ void myDisplay(){
         }
     glEnd();
 
-    loadInnerB2Vertices();
     glBegin(GL_POLYGON);
         for(int i = 0; i < innerLetterB_2.vertices.size(); i ++){
             glVertex2f(innerLetterB_2.vertices[i].xPos, innerLetterB_2.vertices[i].yPos);
         }
     glEnd();
+}
+
+void myDisplay(){
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // draw L
+    drawL();
+
+    drawB();
 
     glFlush();
+}
+
+void initialShapes(){
+    // load l vertices
+    loadLVertices();
+
+    // load outer B
+    loadOuterBVertices();
+
+    // rip inner B out
+    loadInnerB1Vertices();
+
+    loadInnerB2Vertices();
 }
 int main(int argc, char** argv){
     // initialise GLUT
@@ -266,6 +265,9 @@ int main(int argc, char** argv){
 
     // create a window named "Assignment_1"
     glutCreateWindow("Assignment_1");
+
+    // load vertices of shapes
+    initialShapes();
 
     // execute callback
     glutDisplayFunc(myDisplay);
