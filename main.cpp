@@ -88,7 +88,9 @@ Character letterL(-0.5f, 0.0f, 300.0f, 300.0f);
 
 Character outerLetterB(0.5f, 0.0f, 300.0f, 300.0f);
 
-Character innerLetterB(0.5f, 0.0f, 300.0f, 300.0f);
+Character innerLetterB_1(0.5f, 0.0f, 300.0f, 300.0f);
+
+Character innerLetterB_2(0.5f, 0.0f, 300.0f, 300.0f);
 // class Button{
 //     public:
 //         int pivotX;
@@ -156,7 +158,7 @@ void defineCircle(Character& character, int segment, float radius, int posToPivo
         float xPos = sinf(theta) * radius;
 
         // current y pos
-        float yPos = cosf(theta) * radius + radius * posToPivot;
+        float yPos = cosf(theta) * radius + 0.5 * posToPivot;
 
         // take p poses
         Point p(xPos, yPos);
@@ -173,10 +175,35 @@ void loadOuterBVertices(){
     Point p2(-1, 1);
     outerLetterB.addVertex(outerLetterB.convertPointPos(p2));
 
+    // draw 2 half circles
     defineCircle(outerLetterB, 50, 0.5, 1);
 
     defineCircle(outerLetterB, 50, 0.5, -1);
 
+}
+void loadInnerB1Vertices(){
+    // bottom left
+    Point p1(-0.75, -0.75);
+    innerLetterB_1.addVertex(innerLetterB_1.convertPointPos(p1));
+
+    // top left
+    Point p2(-0.75, -0.25);
+    innerLetterB_1.addVertex(innerLetterB_1.convertPointPos(p2));
+
+    // draw half circle
+    defineCircle(innerLetterB_1, 50, 0.25, -1);    
+}
+void loadInnerB2Vertices(){
+    // bottom left
+    Point p1(-0.75, 0.25);
+    innerLetterB_2.addVertex(innerLetterB_2.convertPointPos(p1));
+
+    // top left
+    Point p2(-0.75, 0.75);
+    innerLetterB_2.addVertex(innerLetterB_2.convertPointPos(p2));
+
+    // draw half circle
+    defineCircle(innerLetterB_2, 50, 0.25, 1);    
 }
 
 void myDisplay(){
@@ -206,6 +233,25 @@ void myDisplay(){
     glBegin(GL_POLYGON);
         for(int i = 0; i < outerLetterB.vertices.size(); i ++){
             glVertex2f(outerLetterB.vertices[i].xPos, outerLetterB.vertices[i].yPos);
+        }
+    glEnd();
+
+   
+    glColor3f(0.0f, 0.0f, 0.0f);
+    loadInnerB1Vertices();
+    
+
+    // draw
+    glBegin(GL_POLYGON);
+        for(int i = 0; i < innerLetterB_1.vertices.size(); i ++){
+            glVertex2f(innerLetterB_1.vertices[i].xPos, innerLetterB_1.vertices[i].yPos);
+        }
+    glEnd();
+
+    loadInnerB2Vertices();
+    glBegin(GL_POLYGON);
+        for(int i = 0; i < innerLetterB_2.vertices.size(); i ++){
+            glVertex2f(innerLetterB_2.vertices[i].xPos, innerLetterB_2.vertices[i].yPos);
         }
     glEnd();
 
