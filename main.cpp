@@ -113,6 +113,14 @@ Character mainButton(0.0f, -0.7f, 60.0f, 60.0f);
 
 bool hasMorphed = false;
 
+bool isMorphing = false;
+
+// interpolation progress from 0 to 1
+float morphT = 0.0f;
+
+std::vector<Point> verticesOfL;
+std::vector<Point> verticesOfB;
+
 void loadLeftStarVertices(){
     // pivot point
     Point p0 (0, 0);
@@ -142,6 +150,9 @@ void loadLeftStarVertices(){
     starLeft.addVertex(starLeft.convertPointPos(p10));
 }
 void loadRightStarVertices() {
+    // pivot point
+    Point p0 (0, 0);
+
     Point p1 (-0.4f, -0.6f);
     Point p2 ( 0.0f, -0.3f);
     Point p3 ( 0.4f, -0.6f);
@@ -153,6 +164,7 @@ void loadRightStarVertices() {
     Point p9 (-0.7f,  0.2f);
     Point p10(-0.3f, -0.1f);
 
+    starRight.addVertex(starRight.convertPointPos(p0));
     starRight.addVertex(starRight.convertPointPos(p1));
     starRight.addVertex(starRight.convertPointPos(p2));
     starRight.addVertex(starRight.convertPointPos(p3));
@@ -280,28 +292,7 @@ void drawL(){
         }
     glEnd();
 }
-void drawStar(){
-    // green
-    glColor3f(0.0f, 1.0f, 0.0f);
-
-    // draw a triangle consists of pivot, ajacent 2 vertices around pivot
-    for(int i = 0; i < 10; i ++){
-        glBegin(GL_TRIANGLES);
-            glVertex2f(starLeft.vertices[0].xPos, starLeft.vertices[0].yPos);
-
-            glVertex2f(starLeft.vertices[i + 1].xPos, starLeft.vertices[i + 1].yPos);
-            if(i + 1 == 10){
-                glVertex2f(starLeft.vertices[1].xPos, starLeft.vertices[1].yPos);
-                glEnd();
-                break;
-                
-            }
-            glVertex2f(starLeft.vertices[i + 2].xPos, starLeft.vertices[i + 2].yPos);
-        glEnd();
-    }
     
-
-}
 void drawB(){
     // green
     glColor3f(0.0f, 1.0f, 0.0f);
@@ -340,7 +331,112 @@ void drawMainButton(){
     glEnd();
 }
 
+void drawDebugVertices(float x, float y){
+    glColor3f(1.0f, 0, 0);
 
+    glPointSize(6.0f);
+
+    glBegin(GL_POINTS);
+
+        glVertex2f(x, y);
+    glEnd();
+}
+
+void drawDebugVertices(const std::vector<Point>& vertices) {
+    glColor3f(1.0f, 0.0f, 0.0f);   
+
+    glPointSize(6.0f);             
+    
+    glBegin(GL_POINTS);
+    for (auto& v : vertices) {
+        glVertex2f(v.xPos, v.yPos);
+    }
+    glEnd();
+}
+
+void drawStar(std::vector<Point>& verticesToBeMoved){
+    for(int i = 0; i < 10; i ++){
+        glBegin(GL_TRIANGLES);
+            float pivotX = verticesToBeMoved[0].xPos;
+            float pivotY = verticesToBeMoved[0].yPos;
+
+            float xi1 = verticesToBeMoved[i + 1].xPos;
+            float yi1 = verticesToBeMoved[i + 1].yPos;
+
+            float xi2 = 0;
+            float yi2 = 0;
+            if(i + 1 == 10){
+                xi2 = verticesToBeMoved[1].xPos;
+                yi2 = verticesToBeMoved[1].yPos;
+            }
+            else{
+                xi2 = verticesToBeMoved[i + 2].xPos;
+                yi2 = verticesToBeMoved[i + 2].yPos;
+            }
+    
+            glVertex2f(pivotX, pivotY);
+            glVertex2f(xi1, yi1);
+            glVertex2f(xi2, yi2);
+        glEnd();
+    }
+}
+void morphShape(std::vector<Point> startShapeVertices, std::vector<Point> targetShapeVertices){
+    // green
+    glColor3f(0.0f, 1.0f, 0.0f);
+    std::vector<Point> verticesToBeMoved = startShapeVertices;
+    
+    // map x y values by index
+    for (int i = 0; i < 11; i++) {
+        float startX = startShapeVertices[i].xPos;
+        float startY = startShapeVertices[i].yPos;
+
+        float targetX = targetShapeVertices[i].xPos;
+        float targetY = targetShapeVertices[i].yPos;
+
+        // proper LERP interpolation
+        verticesToBeMoved[i].xPos = startX + morphT * (targetX - startX);
+        verticesToBeMoved[i].yPos = startY + morphT * (targetY - startY);
+
+        
+    }    
+    drawDebugVertices(verticesToBeMoved);
+    drawStar(verticesToBeMoved);
+    
+
+    // float startX = verticesOfLetter[0].xPos;
+    // float startY = verticesOfLetter[0].yPos;
+
+    // glBegin(GL_TRIANGLES);
+    //     verticesOfLetter[0].xPos += morphT * (verticesOfStar[0].xPos - startX);
+    //     verticesOfLetter[0].yPos += morphT * (verticesOfStar[0].yPos - startY);
+
+    // glEnd();
+
+    // draw a triangle consists of pivot, ajacent 2 vertices around pivot
+    // std::vector<Point> startPoints = verticesOfLetter;
+    // for(int i = 0; i < 10; i ++){
+
+        
+
+    //     glBegin(GL_TRIANGLES);
+    //         // resampled i will map reserved star i
+    //         for(int i = 0; i < 10; i ++){
+    //             verticesOfLetter[i].xPos += morphT * (verticesOfStar[i].xPos - startPoints[i].xPos);
+    //             verticesOfLetter[i].yPos += morphT * (verticesOfStar[i].yPos - startPoints[i].yPos);
+    //         }
+    //         glVertex2f(verticesOfLetter[0].xPos, verticesOfLetter[0].yPos);
+
+    //         glVertex2f(verticesOfLetter[i + 1].xPos, verticesOfLetter[i + 1].yPos);
+    //         if(i + 1 == 10){
+    //             glVertex2f(verticesOfLetter[1].xPos, verticesOfLetter[1].yPos);
+    //             glEnd();
+    //             break;
+                
+    //         }
+    //         glVertex2f(verticesOfLetter[i + 2].xPos, verticesOfLetter[i + 2].yPos);
+    //     glEnd();
+    // }
+}
 
 // helper method for computing distance between 2 points in the global scope.
 float dist(Point a, Point b){
@@ -409,132 +505,137 @@ float calculateMaxPerimeter(const Character& shape){
         the interpolation computes exact positions mathematically.
     */
 
-void drawDebugVertices(const std::vector<Point>& vertices) {
-    glColor3f(1.0f, 0.0f, 0.0f);   // red
-    glPointSize(6.0f);             // size of the dot (in pixels)
-    
-    glBegin(GL_POINTS);
-    for (auto& v : vertices) {
-        glVertex2f(v.xPos, v.yPos);
-    }
-    glEnd();
+
+
+Point interpolate(Point& curPoint, Point& nextPoint, float t){
+    // compute delta x y to interpolate
+    float deltaX = nextPoint.xPos - curPoint.xPos;
+
+    float deltaY = nextPoint.yPos - curPoint.yPos;
+
+    Point newPoint = curPoint;
+
+    newPoint.xPos = curPoint.xPos + deltaX * t;
+
+    newPoint.yPos = curPoint.yPos + deltaY * t;
+
+    return newPoint;
 }
 
 std::vector<Point> resample(Character& shape){
-    
     // define new vertices list and keep track of its element count;
     std::vector<Point> newVertices;
-
     // compute total perimeter
     float totalPerimeter = calculateMaxPerimeter(shape);
-
     float threshold = totalPerimeter / 11.0f;
-    
-    // define accumulated distance (perimeter / 11 threshold)
-    // get emptied once accumulated dist >= threshold
+    // define accumulated distance (perimeter / 11 threshold), get emptied once accumulated dist >= threshold
     float accumulatedDis = 0;
-   
     int curIdx = 0;
     // the initial point is the pivot of the star
     newVertices.push_back(shape.vertices[0]);
-
     Point curVertex = shape.vertices[curIdx];
-
     while(newVertices.size() < 11){
         int nextIdx = curIdx + 1;
-
         // calculate the distance from this point to next point
         float segmentLength = dist(shape.vertices[curIdx], shape.vertices[nextIdx]);
-
         // keep track of curPoint position and accumulated distance
+        // scan
         if(accumulatedDis + segmentLength < threshold){
-            printf("method 1 used\n");
             // scan the next vertex, the distance does not exceed threshold, then skip.
             accumulatedDis += segmentLength;
 
             // set where we are to cur Point
             curVertex = shape.vertices[curIdx];
-
             curIdx ++;
-
         }
+        // interpolation
         else{
-            printf("method 2 used\n");
-            if(newVertices.size() == 10){
-                printf("executed\n");
-                float remain = threshold - accumulatedDis;
+            float remain = threshold - accumulatedDis;
 
-                float t = remain / segmentLength;
-            
-                float deltaX = newVertices[0].xPos - shape.vertices[curIdx].xPos;
-                float deltaY = newVertices[0].yPos - shape.vertices[curIdx].yPos;
-                curVertex.xPos = shape.vertices[curIdx].xPos + deltaX * t;
-                curVertex.yPos = shape.vertices[curIdx].yPos + deltaY * t;
+            float t = remain / segmentLength;
+            if(newVertices.size() == 10){
+                curVertex = interpolate(shape.vertices[curIdx], newVertices[0], t);
                 newVertices.push_back(curVertex);
                 break;
             }
             // break down the distance between these points using interpolation
-            float remain = threshold - accumulatedDis;
-
-            float t = remain / segmentLength;
-            
-            float deltaX = shape.vertices[nextIdx].xPos - shape.vertices[curIdx].xPos;
-            float deltaY = shape.vertices[nextIdx].yPos - shape.vertices[curIdx].yPos;
-            curVertex.xPos = shape.vertices[curIdx].xPos + deltaX * t;
-            curVertex.yPos = shape.vertices[curIdx].yPos + deltaY * t;
-
-
+            curVertex = interpolate(shape.vertices[curIdx], shape.vertices[nextIdx], t);
             newVertices.push_back(curVertex);
-
             accumulatedDis = 0;
-
             shape.vertices[curIdx] = curVertex;
-
-            printf("newVertice: %f, %f\n", curVertex.xPos, curVertex.yPos);
+            
         }
     }
-    
     return newVertices;
+}
+
+
+void morphTimer(int value){
+    if(isMorphing){
+        // morph speed
+        morphT += 0.02f;
+
+        // done
+        if(morphT >= 1.0f){
+            morphT = 1.0f;
+            isMorphing = false;
+        }
+
+        // request redraw myDisplay
+        glutPostRedisplay();
+
+        // call morphTimer every 16 milliseconds
+        glutTimerFunc(16, morphTimer, 0);
+    }
 }
 void onMouseClick(int button, int state, int x, int y){
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-        printf("left button got pressed at %d, %d\n", x, y);
+        // printf("left button got pressed at %d, %d\n", x, y);
         // for the time being, do morphing once clicked.
 
         if(!hasMorphed){
             // startMorphing();
-            hasMorphed = true;
-            
-            
+            // resample L
+            verticesOfL = resample(letterL);
 
-            drawDebugVertices(resample(letterL));
+            // resample B
+            verticesOfB = resample(outerLetterB);
+            hasMorphed = true;
+            isMorphing = true;
+            printf("morphed\n");
+
+            glutTimerFunc(0, morphTimer, 0);
         }
         
         
         // if button region gets clicked, then play button animation
     } 
     if(button == GLUT_LEFT_BUTTON && state == GLUT_UP){
-        printf("left button got released at %d, %d\n", x, y);
+        // printf("left button got released at %d, %d\n", x, y);
         // if button region gets released, recover button.
     }
 }
+
 void myDisplay(){
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // // draw L
-    drawL();
+    if(!isMorphing && !hasMorphed){
+        drawL();
+        
+        drawB();
 
-    drawDebugVertices(resample(letterL));
+        drawMainButton();
+    }
+    else if(isMorphing || hasMorphed){
+        glColor3f(0.0f, 1.0f, 0.0f);
 
-    drawB();
+        morphShape(verticesOfL, starLeft.vertices);
 
-    drawDebugVertices(resample(outerLetterB));
+        morphShape(verticesOfB, starRight.vertices);
+    }
 
-    // drawStar();
-
-    drawMainButton();
-
-    glFlush();
+    
+    glutSwapBuffers();
 }
 
 void initialShapes(){
@@ -558,6 +659,8 @@ void initialShapes(){
 int main(int argc, char** argv){
     // initialise GLUT
     glutInit(&argc, argv);
+
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 
     // default size of 300 * 300 pixels but initialise it 800 * 600
     glutInitWindowSize(800, 600);
