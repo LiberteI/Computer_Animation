@@ -123,6 +123,7 @@ bool buttonDown;
 std::vector<Point> verticesOfL;
 std::vector<Point> verticesOfB;
 
+// -------------- load --------------
 void loadLeftStarVertices(){
     // pivot point
     Point p0 (0, 0);
@@ -212,6 +213,7 @@ void loadLVertices(){
     letterL.addVertex(letterL.convertPointPos(point6));
 }
 
+// draw letter B
 void defineCircle(Character& character, int segment, float radius, int posToPivot){
     // define circle of B using calculus
    
@@ -295,6 +297,7 @@ void loadMainButtonVertices(){
     mainButton.addVertex(mainButton.convertPointPos(p8));
 }
 
+// --------------- draw --------------
 void drawL(){
     // green
     glColor3f(0.0f, 1.0f, 0.0f);
@@ -397,13 +400,19 @@ void drawStar(std::vector<Point>& verticesToBeMoved){
     for(int i = 0; i < 10; i ++){
         // green
         glColor3f(0.0f, 1.0f, 0.0f);
+
+        // draw 10 triangles using the 1st i+1 i+2 vertex
         glBegin(GL_TRIANGLES);
+            // get 1st
             float pivotX = verticesToBeMoved[0].xPos;
             float pivotY = verticesToBeMoved[0].yPos;
 
+            // get i + 1
             float xi1 = verticesToBeMoved[i + 1].xPos;
             float yi1 = verticesToBeMoved[i + 1].yPos;
 
+            // get i + 2
+            // normally i + 2, for the last one, use 2nd to enclose the shape
             float xi2 = 0;
             float yi2 = 0;
             if(i + 1 == 10){
@@ -414,19 +423,24 @@ void drawStar(std::vector<Point>& verticesToBeMoved){
                 xi2 = verticesToBeMoved[i + 2].xPos;
                 yi2 = verticesToBeMoved[i + 2].yPos;
             }
-    
+            
+            // draw
             glVertex2f(pivotX, pivotY);
             glVertex2f(xi1, yi1);
             glVertex2f(xi2, yi2);
         glEnd();
     }
 }
+
+// ------------------ morph ----------------
 void morphShape(std::vector<Point> startShapeVertices, std::vector<Point> targetShapeVertices){
     
+    // copy in-process vertices
     std::vector<Point> verticesToBeMoved = startShapeVertices;
     
     // map x y values by index
     for (int i = 0; i < 11; i++) {
+        // define start point and target point
         float startX = startShapeVertices[i].xPos;
         float startY = startShapeVertices[i].yPos;
 
@@ -438,9 +452,11 @@ void morphShape(std::vector<Point> startShapeVertices, std::vector<Point> target
         verticesToBeMoved[i].yPos = startY + morphT * (targetY - startY);
 
     }    
+    // show resampled vertices using debug method
     drawDebugVertices(verticesToBeMoved);
+
+    // draw star while being moved
     drawStar(verticesToBeMoved);
-    
 }
 
 // helper method for computing distance between 2 points in the global scope.
@@ -458,18 +474,24 @@ float calculateMaxPerimeter(const Character& shape){
     // calculate max perimeter.
     float maxPerimeter = 0;
     
+    // define last point
     Point prevPoint(shape.vertices[0].xPos, shape.vertices[0].yPos);
 
     for(int i = 0; i < shape.vertices.size(); i ++){
+        // get next vertex
         Point curPoint = shape.vertices[i];
 
+        // get dist
         float curDist = dist(prevPoint, curPoint);
 
+        // update point
         prevPoint = curPoint;
 
+        // increment
         maxPerimeter += curDist;
     }
 
+    // sum up
     maxPerimeter += dist(shape.vertices[0], shape.vertices[shape.vertices.size() - 1]);
 
     return maxPerimeter;
@@ -599,15 +621,16 @@ bool isInClickableArea(int x, int y){
 
     int totalHeight = glutGet(GLUT_WINDOW_HEIGHT);
 
+    // calculate bounds in x axis
     int buttonLeftBound = totalWidth / 2 - mainButton.charWidth / 2;
     int buttonRightBound = totalWidth / 2 + mainButton.charWidth / 2;
 
+    // calculate bounds in y axis
     int buttonBottomBound = totalHeight - (int)(0.15f * totalHeight) + mainButton.charHeight / 2;
-
     int buttonTopBound = buttonBottomBound - mainButton.charHeight;
 
+    // valid area should be the button box
     return x > buttonLeftBound && x < buttonRightBound && y > buttonTopBound && y < buttonBottomBound;
-
 }
 void onMouseClick(int button, int state, int x, int y){
     
@@ -667,6 +690,7 @@ void myDisplay(){
 }
 
 void idleCallBack(){
+    // request re-display using idle function
     glutPostRedisplay();
 }
 void initialShapes(){
