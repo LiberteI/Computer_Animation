@@ -6,7 +6,10 @@
       "type": "shell",
       "command": "clang++",
       "args": [
-        "main.cpp",
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "src/*.cpp",
         "-o",
         "app",
         "-framework",
@@ -18,7 +21,8 @@
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": ["$gcc"]
+      "problemMatcher": ["$gcc"],
+      "detail": "Build all OpenGL source files using clang++ on macOS"
     }
   ]
 }
