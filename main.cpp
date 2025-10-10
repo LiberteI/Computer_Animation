@@ -118,6 +118,8 @@ bool isMorphing = false;
 // interpolation progress from 0 to 1
 float morphT = 0.0f;
 
+bool buttonDown;
+
 std::vector<Point> verticesOfL;
 std::vector<Point> verticesOfB;
 
@@ -270,6 +272,7 @@ void loadInnerB2Vertices(){
 }
 
 void loadMainButtonVertices(){
+    // top layer
     Point p1(-1, 1);
     Point p2(0.75, 1);
     Point p3(0.75, -0.75);
@@ -280,6 +283,16 @@ void loadMainButtonVertices(){
     mainButton.addVertex(mainButton.convertPointPos(p3));
     mainButton.addVertex(mainButton.convertPointPos(p4));
 
+    // bottom layer
+    Point p5(-1, 1);
+    Point p6(1, 1);
+    Point p7(1, -1);
+    Point p8(-1, -1);
+
+    mainButton.addVertex(mainButton.convertPointPos(p5));
+    mainButton.addVertex(mainButton.convertPointPos(p6));
+    mainButton.addVertex(mainButton.convertPointPos(p7));
+    mainButton.addVertex(mainButton.convertPointPos(p8));
 }
 
 void drawL(){
@@ -320,17 +333,43 @@ void drawB(){
         }
     glEnd();
 }
-void drawMainButton(){
-    // green
-    glColor3f(0.0f, 1.0f, 0.0f);
+void drawMainButton(bool isPressed){
+    // darker green
+    glColor3f(0.0f, 0.5f, 0.0f);
 
     glBegin(GL_POLYGON);
-        for(int i = 0; i < mainButton.vertices.size(); i++){
+        for(int i = 4; i < 8; i++){
+            glVertex2f(mainButton.vertices[i].xPos, mainButton.vertices[i].yPos);
+        }
+    glEnd();
+    
+    float greenShader = 0;
+    if(isPressed){
+        greenShader = 0.2f;
+    }
+    else{
+        greenShader = 0.8f;
+    }
+    // green
+    glColor3f(0.0f, greenShader, 0.0f);
+
+    glBegin(GL_POLYGON);
+        for(int i = 0; i < 4; i++){
             glVertex2f(mainButton.vertices[i].xPos, mainButton.vertices[i].yPos);
         }
     glEnd();
 }
 
+void drawText(const char* text, float x, float y){
+    glColor3f(1.0f, 0, 0);
+    // use openGL coordinate system
+    glRasterPos2f(x, y);
+
+    // choose a glut built-in font
+    for(const char* c = text; *c != '\0'; c ++){
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+    }
+}
 void drawDebugVertices(float x, float y){
     glColor3f(1.0f, 0, 0);
 
@@ -348,14 +387,16 @@ void drawDebugVertices(const std::vector<Point>& vertices) {
     glPointSize(6.0f);             
     
     glBegin(GL_POINTS);
-    for (auto& v : vertices) {
-        glVertex2f(v.xPos, v.yPos);
+    for (int i = 0; i < vertices.size(); i ++) {
+        glVertex2f(vertices[i].xPos, vertices[i].yPos);
     }
     glEnd();
 }
 
 void drawStar(std::vector<Point>& verticesToBeMoved){
     for(int i = 0; i < 10; i ++){
+        // green
+        glColor3f(0.0f, 1.0f, 0.0f);
         glBegin(GL_TRIANGLES);
             float pivotX = verticesToBeMoved[0].xPos;
             float pivotY = verticesToBeMoved[0].yPos;
@@ -381,8 +422,7 @@ void drawStar(std::vector<Point>& verticesToBeMoved){
     }
 }
 void morphShape(std::vector<Point> startShapeVertices, std::vector<Point> targetShapeVertices){
-    // green
-    glColor3f(0.0f, 1.0f, 0.0f);
+    
     std::vector<Point> verticesToBeMoved = startShapeVertices;
     
     // map x y values by index
@@ -397,45 +437,10 @@ void morphShape(std::vector<Point> startShapeVertices, std::vector<Point> target
         verticesToBeMoved[i].xPos = startX + morphT * (targetX - startX);
         verticesToBeMoved[i].yPos = startY + morphT * (targetY - startY);
 
-        
     }    
     drawDebugVertices(verticesToBeMoved);
     drawStar(verticesToBeMoved);
     
-
-    // float startX = verticesOfLetter[0].xPos;
-    // float startY = verticesOfLetter[0].yPos;
-
-    // glBegin(GL_TRIANGLES);
-    //     verticesOfLetter[0].xPos += morphT * (verticesOfStar[0].xPos - startX);
-    //     verticesOfLetter[0].yPos += morphT * (verticesOfStar[0].yPos - startY);
-
-    // glEnd();
-
-    // draw a triangle consists of pivot, ajacent 2 vertices around pivot
-    // std::vector<Point> startPoints = verticesOfLetter;
-    // for(int i = 0; i < 10; i ++){
-
-        
-
-    //     glBegin(GL_TRIANGLES);
-    //         // resampled i will map reserved star i
-    //         for(int i = 0; i < 10; i ++){
-    //             verticesOfLetter[i].xPos += morphT * (verticesOfStar[i].xPos - startPoints[i].xPos);
-    //             verticesOfLetter[i].yPos += morphT * (verticesOfStar[i].yPos - startPoints[i].yPos);
-    //         }
-    //         glVertex2f(verticesOfLetter[0].xPos, verticesOfLetter[0].yPos);
-
-    //         glVertex2f(verticesOfLetter[i + 1].xPos, verticesOfLetter[i + 1].yPos);
-    //         if(i + 1 == 10){
-    //             glVertex2f(verticesOfLetter[1].xPos, verticesOfLetter[1].yPos);
-    //             glEnd();
-    //             break;
-                
-    //         }
-    //         glVertex2f(verticesOfLetter[i + 2].xPos, verticesOfLetter[i + 2].yPos);
-    //     glEnd();
-    // }
 }
 
 // helper method for computing distance between 2 points in the global scope.
@@ -506,7 +511,7 @@ float calculateMaxPerimeter(const Character& shape){
     */
 
 
-
+// lil helper for resampling
 Point interpolate(Point& curPoint, Point& nextPoint, float t){
     // compute delta x y to interpolate
     float deltaX = nextPoint.xPos - curPoint.xPos;
@@ -588,11 +593,33 @@ void morphTimer(int value){
         glutTimerFunc(16, morphTimer, 0);
     }
 }
+
+bool isInClickableArea(int x, int y){
+    int totalWidth = glutGet(GLUT_WINDOW_WIDTH);
+
+    int totalHeight = glutGet(GLUT_WINDOW_HEIGHT);
+
+    int buttonLeftBound = totalWidth / 2 - mainButton.charWidth / 2;
+    int buttonRightBound = totalWidth / 2 + mainButton.charWidth / 2;
+
+    int buttonBottomBound = totalHeight - (int)(0.15f * totalHeight) + mainButton.charHeight / 2;
+
+    int buttonTopBound = buttonBottomBound - mainButton.charHeight;
+
+    return x > buttonLeftBound && x < buttonRightBound && y > buttonTopBound && y < buttonBottomBound;
+
+}
 void onMouseClick(int button, int state, int x, int y){
+    
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+        if(!isInClickableArea(x, y)){
+            printf("you did not reach the button\n");
+
+            return;
+        }
         // printf("left button got pressed at %d, %d\n", x, y);
         // for the time being, do morphing once clicked.
-
+        buttonDown = true;
         if(!hasMorphed){
             // startMorphing();
             // resample L
@@ -602,29 +629,30 @@ void onMouseClick(int button, int state, int x, int y){
             verticesOfB = resample(outerLetterB);
             hasMorphed = true;
             isMorphing = true;
-            printf("morphed\n");
-
-            glutTimerFunc(0, morphTimer, 0);
+            
         }
         
-        
+        glutTimerFunc(0, morphTimer, 0);
         // if button region gets clicked, then play button animation
     } 
     if(button == GLUT_LEFT_BUTTON && state == GLUT_UP){
         // printf("left button got released at %d, %d\n", x, y);
         // if button region gets released, recover button.
+        buttonDown = false;
     }
 }
 
 void myDisplay(){
     glClear(GL_COLOR_BUFFER_BIT);
 
+    drawMainButton(buttonDown);
+
+    drawText("Morph", mainButton.pivotX - 0.05f, mainButton.pivotY);
+
     if(!isMorphing && !hasMorphed){
         drawL();
         
         drawB();
-
-        drawMainButton();
     }
     else if(isMorphing || hasMorphed){
         glColor3f(0.0f, 1.0f, 0.0f);
@@ -638,6 +666,9 @@ void myDisplay(){
     glutSwapBuffers();
 }
 
+void idleCallBack(){
+    glutPostRedisplay();
+}
 void initialShapes(){
     // load l vertices
     loadLVertices();
@@ -676,6 +707,9 @@ int main(int argc, char** argv){
 
     // execute callback
     glutDisplayFunc(myDisplay);
+
+    // ensure button still works after morphing
+    glutIdleFunc(idleCallBack);
 
     // start glut state machine
     glutMainLoop();
