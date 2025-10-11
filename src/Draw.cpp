@@ -1,5 +1,6 @@
 #include "Shape.h"
 #include "Draw.h"
+#define GL_SILENCE_DEPRECATION
 void drawL(){
     // green
     glColor3f(0.0f, 1.0f, 0.0f);
