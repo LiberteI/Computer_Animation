@@ -19,11 +19,16 @@ A simple **OpenGL** program that morphs custom shapes (e.g., letters → stars) 
 ## 🧩 Code Architecture
 
 main.cpp → Handles user input & display
+
 │
 ├── Character → Defines custom letter shapes
+
 ├── Shape → Loads vertices for each shape
+
 ├── Point → Helper class for vertex representation
+
 ├── Draw → Connects vertices and draws the shape
+
 └── Morph → Handles resampling, interpolation, and transformation
 
 
